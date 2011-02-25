@@ -7,6 +7,7 @@
  *    Dr Donald Bindner
  * Thanks to:
  *    Dr Robert Matthews 
+ *    Shannon Pamperl
  *       from Truman State University
  * 
  * SHA1_HMAC lib by Markus Gutschke, Google Inc.
@@ -32,8 +33,6 @@
 #include <string.h>
 //////////////////////////////////////
 
-u32 last_hash = 1000000;
-u8 disp_scroll = 0;
 
 
 //////////////////////////////////////
@@ -275,24 +274,38 @@ u8 base32_decode(const u8 *encoded, u8 *result, u8 bufSize)
 
 
 
-
-
-
+struct otp_cache sOtp_cache;
 
 void sx_otp(u8 line)
 {
-  disp_scroll = (disp_scroll + 1) % 2;
+  sOtp_cache.disp_scroll = (sOtp_cache.disp_scroll + 1) % 2;
+  sOtp_cache.needs_screen_updated = 1;
 }
 
 
-void display_otp(u8 line, u8 update)
+void update_otp(u8 line, u8 update)
 {
-  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(disp_scroll == 0 ? last_hash / 10 : last_hash % 100000, 5, 0), SEG_ON);
+  if (sOtp_cache.needs_screen_updated) {
+	// display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.disp_scroll == 0 ? sOtp_cache.last_hash / 10 : sOtp_cache.last_hash % 100000, 5, 0), SEG_ON);
+	if (sOtp_cache.disp_scroll == 0) {
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8*)" -XXX", SEG_ON);
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_2_0), itoa(sOtp_cache.last_hash / 1000, 3, 0), SEG_ON);
+	} else {
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 2), SEG_ON);
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_1_0), (u8*)"- ", SEG_ON);
+	}
+	sOtp_cache.needs_screen_updated = 0;
+  }
   
-  
+  // If this is not the 30th second, never bother updating;
   if (sTime.system_time % 30) return;
   
-  disp_scroll = 0;
+  // If the token was calculated in the last 15 sec, never bother updating
+  // Note that the above return won't cover this one
+  // As the timer ticks 100 times a sec
+  if ((sTime.system_time - sOtp_cache.last_update) < 15) return;
+  
+  sOtp_cache.disp_scroll = 0;
   u8 buf[] = GOOGLE_SECRET_KEY; 
   // Don't worry, this is not my personal account key.
   u8 buf_len = 17;
@@ -328,14 +341,22 @@ void display_otp(u8 line, u8 update)
     memset(hash, 0, sizeof(hash));
     truncatedHash &= 0x7FFFFFFF;
     truncatedHash %= 1000000;
-	last_hash = truncatedHash;
+	sOtp_cache.last_hash = truncatedHash;
+	sOtp_cache.needs_screen_updated = 1;
+	sOtp_cache.last_update = sTime.system_time;
 	//display_chars(LCD_SEG_L1_3_0, itoa(truncatedHash / 100000, 4, 0), SEG_ON);
-    display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(truncatedHash / 10, 5, 0), SEG_ON);
+    //display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(truncatedHash / 10, 5, 0), SEG_ON);
 	//pru16f("%d\n",truncatedHash);
   //}
 }
 
-
+void display_otp(u8 line, u8 update)
+{
+	if (update == DISPLAY_LINE_UPDATE_FULL)	
+	{
+		display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8 *)"  totp", SEG_ON);
+	}
+}
 
 
 

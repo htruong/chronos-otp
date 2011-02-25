@@ -310,11 +310,11 @@ const struct menu menu_L2_Eggtimer =
 //  Line2 - OTP (Google OTP -- Authenticator)
 const struct menu menu_L2_Otp =
 {
-        FUNCTION(sx_otp),          // direct function
-        FUNCTION(dummy),          // sub menu function
+        FUNCTION(sx_otp),          	// direct function
+        FUNCTION(dummy),          	// sub menu function
         FUNCTION(menu_skip_next),	// next item function
-        FUNCTION(display_otp),// display function
-        FUNCTION(display_otp),      // new display data
+        FUNCTION(display_otp),		// display function
+        FUNCTION(update_otp),      	// new display data
 };
 #endif
 

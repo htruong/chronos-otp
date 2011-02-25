@@ -7,6 +7,7 @@
  *    Dr Donald Bindner
  * Thanks to:
  *    Dr Robert Matthews 
+ *    Shannon Pamperl
  *       from Truman State University
  * 
  * SHA1_HMAC lib by Markus Gutschke, Google Inc.
@@ -28,6 +29,7 @@
 // Extern section
 extern void sx_otp(u8 line);
 extern void display_otp(u8 line, u8 update);
+extern void update_otp(u8 line, u8 update);
 
 // Base32 decode function
 extern u8 base32_decode(const u8 *encoded, u8 *result, u8 bufSize);
@@ -43,6 +45,15 @@ typedef struct {
     u32 count[2];
     u8  buffer[SHA1_BLOCKSIZE];
 } SHA1_CTX;
+
+struct otp_cache {
+  u32 last_hash;
+  u32 last_update;
+  u8 disp_scroll;
+  u8 needs_screen_updated;
+};
+extern struct otp_cache sOtp_cache;
+
 
 void SHA1_Init(SHA1_CTX* context);
 void SHA1_Update(SHA1_CTX* context, const u8* data, const u32 len);
