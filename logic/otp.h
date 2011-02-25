@@ -26,7 +26,7 @@
 
 // *************************************************************************************************
 // Extern section
-
+extern void sx_otp(u8 line);
 extern void display_otp(u8 line, u8 update);
 
 // Base32 decode function

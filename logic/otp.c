@@ -32,7 +32,8 @@
 #include <string.h>
 //////////////////////////////////////
 
-
+u32 last_hash = 1000000;
+u8 disp_scroll = 0;
 
 
 //////////////////////////////////////
@@ -278,12 +279,20 @@ u8 base32_decode(const u8 *encoded, u8 *result, u8 bufSize)
 
 
 
-
-
+void sx_otp(u8 line)
+{
+  disp_scroll = (disp_scroll + 1) % 2;
+}
 
 
 void display_otp(u8 line, u8 update)
 {
+  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(disp_scroll == 0 ? last_hash / 10 : last_hash % 100000, 5, 0), SEG_ON);
+  
+  
+  if (sTime.system_time % 30) return;
+  
+  disp_scroll = 0;
   u8 buf[] = GOOGLE_SECRET_KEY; 
   // Don't worry, this is not my personal account key.
   u8 buf_len = 17;
@@ -319,9 +328,9 @@ void display_otp(u8 line, u8 update)
     memset(hash, 0, sizeof(hash));
     truncatedHash &= 0x7FFFFFFF;
     truncatedHash %= 1000000;
-	
-	display_chars(LCD_SEG_L1_3_0, itoa(truncatedHash / 100000, 4, 0), SEG_ON);
-    display_chars(LCD_SEG_L2_4_0, itoa(truncatedHash % 100000, 5, 0), SEG_ON);
+	last_hash = truncatedHash;
+	//display_chars(LCD_SEG_L1_3_0, itoa(truncatedHash / 100000, 4, 0), SEG_ON);
+    display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(truncatedHash / 10, 5, 0), SEG_ON);
 	//pru16f("%d\n",truncatedHash);
   //}
 }

@@ -694,7 +694,7 @@ void simpliciti_sync_decode_ap_cmd_callback(void)
 										break;
 
 		case SYNC_AP_CMD_SET_WATCH:		// Set watch parameters
-										sTime.system_time 	= (u32)((((u32)(simpliciti_data[1])) << 24) + (((u32)(simpliciti_data[2])) << 16) + (u32)(simpliciti_data[3] << 8) + (u32)(simpliciti_data[4]));
+										sTime.system_time 	= (u32)((((u32)(simpliciti_data[1])) << 24) + (((u32)(simpliciti_data[2])) << 16) + (u16)(simpliciti_data[3] << 8) + (u32)(simpliciti_data[4]));
 										sTime.UTCoffset 		= (s8)simpliciti_data[5];
 										#ifdef CONFIG_ALARM
 										sAlarm.hour			= simpliciti_data[8];

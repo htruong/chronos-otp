@@ -1211,7 +1211,7 @@ proc sync_write_watch {} {
 
 # Read system time and date
 proc sync_get_time_and_date {} {
-  updateStatusSYNC "Not implemented."
+  updateStatusSYNC [clock seconds]_[expr [clock seconds] - 1262304000]
 }
 
 

@@ -198,12 +198,6 @@ void display_selection_Timeformat1(u8 segments, u32 index, u8 digits, u8 blanks,
 void mx_time(u8 line)
 {
   u8 select;
-  s32 timeformat;
-  s16 timeformat1;
-  s32 hours;
-  s32 minutes;
-  s32 seconds;
-  u8 * str;
 
   // Clear display
   clear_display_all();
@@ -236,20 +230,24 @@ void sx_time(u8 line)
 // *************************************************************************************************
 void display_time(u8 line, u8 update)
 {
+  if (!sTime.drawFlag) return;
+  
   // Partial update
   if (update == DISPLAY_LINE_UPDATE_PARTIAL)
   {
 	// Always update seconds
 	display_chars(LCD_SEG_L1_3_0, itoa(sTime.system_time % 10000, 4, 0), SEG_ON);
+	//display_chars(LCD_SEG_L2_4_0, itoa(sTime.system_time / 10000, 5, 0), SEG_ON);
   } 
   else if (update == DISPLAY_LINE_UPDATE_FULL)
   {
 	// Full update
 	display_chars(LCD_SEG_L1_3_0, itoa(sTime.system_time % 10000, 4, 0), SEG_ON);
-	display_chars(LCD_SEG_L2_4_0, itoa(sTime.system_time / 10000, 5, 0), SEG_ON);
+	//display_chars(LCD_SEG_L2_4_0, itoa(sTime.system_time / 10000, 5, 0), SEG_ON);
   } 
   else if (update == DISPLAY_LINE_CLEAR)
   {
   }
+  sTime.drawFlag = 0;
 }
 
