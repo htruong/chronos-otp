@@ -291,14 +291,15 @@ void update_otp(u8 line, u8 update)
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8*)" -XXX", SEG_ON);
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_2_0), itoa(sOtp_cache.last_hash / 1000, 3, 0), SEG_ON);
 	} else {
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 2), SEG_ON);
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 0), SEG_ON);
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_1_0), (u8*)"- ", SEG_ON);
 	}
 	sOtp_cache.needs_screen_updated = 0;
   }
   
-  // If this is not the 30th second, never bother updating;
-  if (sTime.system_time % 30) return;
+  // If this is not the 30th second, never bother updating
+  // Unless we have never updated the totp
+  if (sTime.system_time % 30 && sOtp_cache.last_update) return;
   
   // If the token was calculated in the last 15 sec, never bother updating
   // Note that the above return won't cover this one
@@ -352,7 +353,7 @@ void update_otp(u8 line, u8 update)
 
 void display_otp(u8 line, u8 update)
 {
-	if (update == DISPLAY_LINE_UPDATE_FULL)	
+	if (update == DISPLAY_LINE_UPDATE_FULL)
 	{
 		display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8 *)"  totp", SEG_ON);
 	}
