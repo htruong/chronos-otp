@@ -362,6 +362,7 @@ extern void display_hours_12_or_24(u8 segments, u32 value, u8 digits, u8 blanks,
 
 // Integer to string conversion 
 extern u8 * itoa(u32 n, u8 digits, u8 blanks);
+extern u8 * padint(u8 val, u8 length, u8 leftpad, u8 rightpad);
 
 // Segment index helper function
 extern u8 switch_seg(u8 line, u8 index1, u8 index2);

@@ -287,6 +287,7 @@ void update_otp(u8 line, u8 update)
 {
   if (sOtp_cache.needs_screen_updated) {
 	// display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.disp_scroll == 0 ? sOtp_cache.last_hash / 10 : sOtp_cache.last_hash % 100000, 5, 0), SEG_ON);
+	
 	if (sOtp_cache.disp_scroll == 0) {
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8*)" -XXX", SEG_ON);
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_2_0), itoa(sOtp_cache.last_hash / 1000, 3, 0), SEG_ON);
@@ -294,6 +295,7 @@ void update_otp(u8 line, u8 update)
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 0), SEG_ON);
 	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_1_0), (u8*)"- ", SEG_ON);
 	}
+	
 	sOtp_cache.needs_screen_updated = 0;
   }
   
