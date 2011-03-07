@@ -52,20 +52,9 @@
 #include "clock.h"
 #include "user.h"
 
-//pfs
-#ifndef ELIMINATE_BLUEROBIN
-#include "bluerobin.h"
-#endif
-
-#ifdef CONFIG_SIDEREAL
-#include "sidereal.h"
-#endif
-
 #include "date.h"
 
-#ifdef CONFIG_USE_SYNC_TOSET_TIME
 #include "rfsimpliciti.h"
-#endif
 
 
 // *************************************************************************************************
@@ -74,6 +63,8 @@ void reset_clock(void);
 void clock_tick(void);
 void mx_time(u8 line);
 void sx_time(u8 line);
+
+u8 current_hour, current_minute, current_second;
 
 
 // *************************************************************************************************
@@ -106,6 +97,7 @@ void reset_clock(void)
 {
 	// Set global system time to 0
 	sTime.system_time = 0;
+	sTime.force_resync = 1;
 	
 	// Display style of both lines is default (HH:MM)
 	sTime.line1ViewStyle = DISPLAY_DEFAULT_VIEW;
@@ -136,6 +128,56 @@ void clock_tick(void)
 
 	// Increase global system time
 	sTime.system_time++;
+	
+	if (!sTime.force_resync) {
+	  // Add 1 second
+	  sTime.second++;
+
+	  // Add 1 minute
+	  if (sTime.second == 60)
+	  {
+		  sTime.second = 0;
+		  sTime.minute++;
+		  sTime.drawFlag++;
+
+		  // Add 1 hour
+		  if (sTime.minute == 60)
+		  {
+			  sTime.minute = 0;
+			  sTime.hour++;
+			  sTime.drawFlag++;
+
+			  // Resync
+			  if (sTime.hour == 24)
+			  {
+				  sTime.hour = 0;
+				  sTime.force_resync = 1;
+				  clock_resync();
+			  }
+		  }
+	  }
+	} else {
+	  clock_resync();
+	  sTime.drawFlag = 3;
+	}
+}
+
+void clock_resync(void)
+{
+  u32 calc_time;
+  if(sTime.UTCoffset == 0) {
+	calc_time = sTime.system_time;
+  } else if (sTime.UTCoffset < 0) {
+	calc_time = sTime.system_time + (u8)(sTime.UTCoffset * (-1)) * 3600;
+  } else {
+	calc_time = sTime.system_time - (u8)sTime.UTCoffset * 3600;
+  }
+
+  sTime.second = calc_time % 60;
+  sTime.minute = (calc_time / 60) % 60;
+  sTime.hour = (calc_time / 3600) % 24;
+  sTime.drawFlag = 3;
+  sTime.force_resync = 0;
 }
 
 
@@ -230,24 +272,21 @@ void sx_time(u8 line)
 // *************************************************************************************************
 void display_time(u8 line, u8 update)
 {
-  if (!sTime.drawFlag) return;
-  
-  // Partial update
-  if (update == DISPLAY_LINE_UPDATE_PARTIAL)
-  {
-	// Always update seconds
-	display_chars(LCD_SEG_L1_3_0, itoa(sTime.system_time % 10000, 4, 0), SEG_ON);
-	//display_chars(LCD_SEG_L2_4_0, itoa(sTime.system_time / 10000, 5, 0), SEG_ON);
-  } 
-  else if (update == DISPLAY_LINE_UPDATE_FULL)
-  {
-	// Full update
-	display_chars(LCD_SEG_L1_3_0, itoa(sTime.system_time % 10000, 4, 0), SEG_ON);
-	//display_chars(LCD_SEG_L2_4_0, itoa(sTime.system_time / 10000, 5, 0), SEG_ON);
-  } 
-  else if (update == DISPLAY_LINE_CLEAR)
-  {
+  if (update == DISPLAY_LINE_UPDATE_PARTIAL) {
+	if (!sTime.drawFlag) return;
+	if (line == LINE2) display_chars(LCD_SEG_L2_1_0, itoa(sTime.second, 2, 0), SEG_ON); 
+	if (sTime.drawFlag > 2) display_chars(switch_seg(line, LCD_SEG_L1_3_2, LCD_SEG_L2_3_2), itoa(sTime.hour, 2, 0), SEG_ON);
+	if (sTime.drawFlag > 1) display_chars(switch_seg(line, LCD_SEG_L1_1_0, LCD_SEG_L2_1_0), itoa(sTime.minute, 2, 0), SEG_ON);
+  } else if (update == DISPLAY_LINE_UPDATE_FULL) {
+	if (line == LINE2) display_chars(LCD_SEG_L2_1_0, itoa(sTime.second, 2, 0), SEG_ON);
+	display_chars(switch_seg(line, LCD_SEG_L1_3_2, LCD_SEG_L2_3_2), itoa(sTime.hour, 2, 0), SEG_ON);
+	display_chars(switch_seg(line, LCD_SEG_L1_1_0, LCD_SEG_L2_1_0), itoa(sTime.minute, 2, 0), SEG_ON);
+	display_symbol(switch_seg(line, LCD_SEG_L1_COL, LCD_SEG_L2_COL0), SEG_ON_BLINK_ON);
+  } else if (update == DISPLAY_LINE_CLEAR) {
+	display_symbol(switch_seg(line, LCD_SEG_L1_COL, LCD_SEG_L2_COL0), SEG_OFF_BLINK_OFF);
+	display_symbol(LCD_SYMB_AM, SEG_OFF);
   }
+  
   sTime.drawFlag = 0;
 }
 

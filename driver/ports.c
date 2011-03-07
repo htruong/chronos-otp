@@ -57,7 +57,6 @@
 #include "alarm.h"
 #include "rfsimpliciti.h"
 #include "simpliciti.h"
-#include "altitude.h"
 #include "stopwatch.h"
 
 

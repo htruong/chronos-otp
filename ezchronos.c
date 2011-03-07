@@ -60,15 +60,6 @@
 #include "alarm.h"
 #include "stopwatch.h"
 #include "battery.h"
-#include "temperature.h"
-#include "altitude.h"
-#ifdef FEATURE_PROVIDE_ACCEL
-#include "acceleration.h"
-#endif
-//pfs
-#ifndef ELIMINATE_BLUEROBIN 
-#include "bluerobin.h"
-#endif
 #include "rfsimpliciti.h"
 #include "simpliciti.h"
 #ifdef CONFIG_TEST
@@ -77,20 +68,10 @@
 #ifdef CONFIG_EGGTIMER
 #include "eggtimer.h"
 #endif
-#ifdef CONFIG_PHASE_CLOCK
-#include "phase_clock.h"
-#endif
-#ifdef CONFIG_SIDEREAL
-#include "sidereal.h"
-#endif
 
 #ifdef CONFIG_INFOMEM
 #include "infomem.h"
 #endif
-#ifdef CONFIG_STRENGTH
-#include "strength.h"
-#endif
-
 #include "mrfi.h"
 #include "nwk_types.h"
 
@@ -367,10 +348,6 @@ void init_global_variables(void)
 	// Set date to default value
 	reset_date();
 	
-	#ifdef CONFIG_SIDEREAL
-	reset_sidereal_clock();
-	#endif
-	
 	#ifdef CONFIG_ALARM
 	// Set alarm time to default value 
 	reset_alarm();
@@ -384,21 +361,6 @@ void init_global_variables(void)
 	reset_stopwatch();
 #endif
 	
-	// Reset altitude measurement
-#ifdef CONFIG_ALTITUDE
-	reset_altitude_measurement();
-#endif
-	
-	#ifdef FEATURE_PROVIDE_ACCEL
-	// Reset acceleration measurement
-	reset_acceleration();
-	#endif
-	
-	// Reset BlueRobin stack
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN 
-	reset_bluerobin();
-	#endif
 
 #ifdef CONFIG_EGGTIMER
 	//Set Eggtimer to a 5 minute default
@@ -406,20 +368,8 @@ void init_global_variables(void)
 	reset_eggtimer();
 #endif
 
-#ifdef CONFIG_PROUT
-        reset_prout();
-#endif
-
-#ifdef CONFIG_PHASE_CLOCK
-	// default program
-	sPhase.program = 0;
-#endif
-
 	// Reset SimpliciTI stack
 	reset_rf();
-	
-	// Reset temperature measurement 
-	reset_temp_measurement();
 
 	#ifdef CONFIG_BATTERY
 	// Reset battery measurement
@@ -563,18 +513,7 @@ void wakeup_event(void)
 // *************************************************************************************************
 void process_requests(void)
 {
-	// Do temperature measurement
-	if (request.flag.temperature_measurement) temperature_measurement(FILTER_ON);
-	
 	// Do pressure measurement
-#ifdef CONFIG_ALTITUDE
-  	if (request.flag.altitude_measurement) do_altitude_measurement(FILTER_ON);
-#endif
-	
-	#ifdef FEATURE_PROVIDE_ACCEL
-	// Do acceleration measurement
-	if (request.flag.acceleration_measurement) do_acceleration_measurement();
-	#endif
 	
 	#ifdef CONFIG_BATTERY
 	// Do voltage measurement
@@ -586,16 +525,6 @@ void process_requests(void)
 	if (request.flag.buzzer) start_buzzer(2, BUZZER_ON_TICKS, BUZZER_OFF_TICKS);
 	#endif
 	
-#ifdef CONFIG_STRENGTH
-	if (request.flag.strength_buzzer && strength_data.num_beeps != 0) 
-	{
-		start_buzzer(strength_data.num_beeps, 
-			     STRENGTH_BUZZER_ON_TICKS, 
-			     STRENGTH_BUZZER_OFF_TICKS);
-		strength_data.num_beeps = 0;
-	}
-#endif
-
 	// Reset request flag
 	request.all_flags = 0;
 }
@@ -693,16 +622,7 @@ void display_update(void)
 	// Restore blinking icons (blinking memory is cleared when calling set_value)
 	if (display.flag.full_update) 
 	{
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-		if (is_bluerobin() == BLUEROBIN_CONNECTED) 
-		{
-			// Turn on beeper icon to show activity
-			display_symbol(LCD_ICON_BEEPER1, SEG_ON_BLINK_OFF);
-			display_symbol(LCD_ICON_BEEPER2, SEG_ON_BLINK_OFF);
-			display_symbol(LCD_ICON_BEEPER3, SEG_ON_BLINK_OFF);
-		}
-	#endif
+	  
 	}
 	
 	// Clear display flag
@@ -766,7 +686,6 @@ void read_calibration_values(void)
 	{
 		// If no values are available (i.e. INFO D memory has been erased by user), assign experimentally derived values	
 		rf_frequoffset	= 4;
-		sTemp.offset 	= -250;
 		#ifdef CONFIG_BATTERY
 		sBatt.offset 	= -10;	
 		#endif
@@ -774,9 +693,6 @@ void read_calibration_values(void)
 		simpliciti_ed_address[1] = sMyROMAddress.addr[1];
 		simpliciti_ed_address[2] = sMyROMAddress.addr[2];
 		simpliciti_ed_address[3] = sMyROMAddress.addr[3];
-#ifdef CONFIG_ALTITUDE
-		sAlt.altitude_offset	 = 0;
-#endif
 	}
 	else
 	{
@@ -786,8 +702,7 @@ void read_calibration_values(void)
 		if ((rf_frequoffset > 20) && (rf_frequoffset < (256-20)))
 		{
 			rf_frequoffset = 0;
-		} 
-		sTemp.offset 	= (s16)((cal_data[2] << 8) + cal_data[3]);
+		}
 		#ifdef CONFIG_BATTERY
 		sBatt.offset 	= (s16)((cal_data[4] << 8) + cal_data[5]);
 		#endif

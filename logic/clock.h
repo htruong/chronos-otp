@@ -50,6 +50,7 @@ extern void reset_clock(void);
 extern void sx_time(u8 line);
 extern void mx_time(u8 line);
 extern void clock_tick(void);
+extern void clock_resync(void);
 extern void display_time(u8 line, u8 update);
 
 
@@ -57,9 +58,15 @@ extern void display_time(u8 line, u8 update);
 // Global Variable section
 struct time
 {
-	// Time data
+	// System epoch time
 	u32 	system_time;
 
+	// THESE CALCULATED BASED ON system_time
+	// DO NOT MANIPULATE THIS DIRECTLY
+	u8		hour;
+	u8		minute;
+	u8 		second;
+	
 	// Flag to minimize display updates
 	u8 		drawFlag;
 
@@ -69,8 +76,13 @@ struct time
 		
 	// Inactivity detection (exits set_value() function)
 	u32 	last_activity;
+	
 	// offset of local time from UTC (=1: set time is UTC+1 =CET)
 	s8		UTCoffset;
+	
+	// Force the resynchronization/recalculation of date and time
+	// based on the system epoch time
+	s8		force_resync;
 };
 extern struct time sTime;
 

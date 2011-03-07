@@ -48,10 +48,7 @@
 
 // logic
 #include "rfbsl.h"
-//pfs
-#ifndef ELIMINATE_BLUEROBIN
-#include "bluerobin.h"
-#endif
+
 #include "rfsimpliciti.h"
 
 
@@ -80,12 +77,6 @@ void mx_rfbsl(u8 line)
         message.flag.type_locked = 1;
         return;
     }
-	
-	// Exit if BlueRobin stack is active
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-	if (is_bluerobin()) return;
-	#endif
 	
 	// Exit if SimpliciTI stack is active
 	if (is_rf()) return;

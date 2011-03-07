@@ -1179,8 +1179,8 @@ proc sync_write_watch {} {
 
   set truong_epoch    [expr [clock seconds] - 1262304000]
   #set truong_epoch    1298355750
-  set utc_offset -6
-  updateStatusSYNC [format "0x%02X" [expr $truong_epoch >> 24]]_[format "0x%02X" [expr ($truong_epoch >> 16) & 0xFF]]_[format "0x%02X" [expr ($truong_epoch >> 8) & 0xFF]]_[format "0x%02X" [expr $truong_epoch & 0xFF]]_[format "0x%02X" [expr $utc_offset]]
+  set utc_offset 0
+  updateStatusSYNC [format "0x%02X" [expr $truong_epoch >> 24]]_[format "0x%02X" [expr ($truong_epoch >> 16) & 0xFF]]_[format "0x%02X" [expr ($truong_epoch >> 8) & 0xFF]]_[format "0x%02X" [expr $truong_epoch & 0xFF]]_[format "0x%02X" [expr  $utc_offset & 0x000000FF]]
 
   # AP not enabled?
   if { !$simpliciti_on } { return }
@@ -1191,21 +1191,12 @@ proc sync_write_watch {} {
   lappend cmd [format "0x%02X" [expr ($truong_epoch >> 16) & 0xFF]]
   lappend cmd [format "0x%02X" [expr ($truong_epoch >> 8) & 0xFF]]
   lappend cmd [format "0x%02X" [expr $truong_epoch & 0xFF]]
-  lappend cmd [format "0x%02X" [expr $utc_offset]]
-  lappend cmd [format "0x%02X" 0] 
-  lappend cmd [format "0x%02X" 0] 
-  lappend cmd [format "0x%02X" $sync_alarm_hours] 
-  lappend cmd [format "0x%02X" $sync_alarm_minutes] 
-  set t1 [format "%.0f" [expr $sync_temperature_24*10]]
-  lappend cmd [format "0x%02X" [expr $t1 >> 8]]
-  lappend cmd [format "0x%02X" [expr $t1 & 0xFF]] 
-  lappend cmd [format "0x%02X" [expr $sync_altitude_24 >> 8]]
-  lappend cmd [format "0x%02X" [expr $sync_altitude_24 & 0xFF]] 
+  lappend cmd [format "0x%02X" [expr $utc_offset & 0x000000FF]]
 
   # Transfer command to RF Access Point point
   BM_SYNC_SendCommand $cmd
 
-  updateStatusSYNC [format "0x%02X" [expr $truong_epoch >> 24]]_[format "0x%02X" [expr ($truong_epoch >> 16) & 0xFF]]_[format "0x%02X" [expr ($truong_epoch >> 8) & 0xFF]]_[format "0x%02X" [expr $truong_epoch & 0xFF]]_[format "0x%02X" [expr $utc_offset]]
+  updateStatusSYNC [format "0x%02X" [expr $truong_epoch >> 24]]_[format "0x%02X" [expr ($truong_epoch >> 16) & 0xFF]]_[format "0x%02X" [expr ($truong_epoch >> 8) & 0xFF]]_[format "0x%02X" [expr $truong_epoch & 0xFF]]_[format "0x%02X" [expr  $utc_offset & 0x000000FF]]
 }
 
 

@@ -46,23 +46,9 @@
 
 // driver
 #include "display.h"
-#ifdef FEATURE_PROVIDE_ACCEL
-#include "vti_as.h"
-#endif
 #include "vti_ps.h"
 #include "ports.h"
 #include "timer.h"
-
-// logic
-#ifdef FEATURE_PROVIDE_ACCEL
-#include "acceleration.h"
-#endif
-#include "altitude.h"
-#include "temperature.h"
-//pfs
-#ifndef ELIMINATE_BLUEROBIN
-#include "bluerobin.h"
-#endif
 
 
 // *************************************************************************************************
@@ -156,52 +142,12 @@ void test_mode(void)
 								while (BUTTON_STAR_IS_PRESSED && BUTTON_UP_IS_PRESSED);
 								break;
 						case 1:	// Altitude measurement
-#ifdef CONFIG_ALTITUDE
-								display_altitude(LINE1, DISPLAY_LINE_UPDATE_FULL);
-								for (i=0; i<2; i++)
-								{
-									while((PS_INT_IN & PS_INT_PIN) == 0); 
-									do_altitude_measurement(FILTER_OFF);
-									display_altitude(LINE1, DISPLAY_LINE_UPDATE_PARTIAL);
-								}
-								stop_altitude_measurement();	
-#endif
 								break;
 						case 2: // Temperature measurement
-								display_temperature(LINE1, DISPLAY_LINE_UPDATE_FULL);
-								for (i=0; i<4; i++)
-								{
-									Timer0_A4_Delay(CONV_MS_TO_TICKS(250));
-									temperature_measurement(FILTER_OFF);
-									display_temperature(LINE1, DISPLAY_LINE_UPDATE_PARTIAL);
-								}
 								break;
 						case 3: // Acceleration measurement
-#ifdef FEATURE_PROVIDE_ACCEL
-								as_start();
-								for (i=0; i<4; i++)
-								{
-									Timer0_A4_Delay(CONV_MS_TO_TICKS(250));
-									as_get_data(sAccel.xyz);
-									str = itoa( sAccel.xyz[0], 3, 0);
-									display_chars(LCD_SEG_L1_2_0, str, SEG_ON);
-									str = itoa( sAccel.xyz[2], 3, 0);
-									display_chars(LCD_SEG_L2_2_0, str, SEG_ON);
-								}
-								as_stop();
-#endif
 								break;
 						//pfs
-						#ifndef ELIMINATE_BLUEROBIN
-						case 4:	// BlueRobin test
-								button.flag.up = 1;
-								sx_bluerobin(LINE1);
-								Timer0_A4_Delay(CONV_MS_TO_TICKS(100));
-								get_bluerobin_data();
-								display_heartrate(LINE1, DISPLAY_LINE_UPDATE_FULL);
-								stop_bluerobin();
-								break;
-						#endif
 					}
 					
 					// Debounce button

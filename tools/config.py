@@ -23,7 +23,7 @@ DATA = SortedDict()
 DATA["CONFIG_FREQUENCY"] = {
         "name": "Frequency",
         "depends": [],
-        "default": 902,
+        "default": 433,
         "type": "choices",
         "values": [902, 868, 433],
         "help": "Radio frequency for the clock"
@@ -39,17 +39,10 @@ DATA["OPTION_TIME_DISPLAY"] = {
         "help": "Select how time should be displayed, in order of code size options are- 0 = 24hr, 1=12hr (AM/PM) or 2=selectable"
 }
 
-DATA["CONFIG_METRIC_ONLY"] = {
-        "name": "Metric only code (-286 bytes)",
-        "depends": [],
-        "default": False,
-        "help": "Only add code for Metric units (meter/celsius) to reduce image size",
-}
-
 DATA["FIXEDPOINT"] = {
         "name": "Fixedpoint (-5078 bytes)",
         "depends": [],
-        "default": False,
+        "default": True,
         "help": "Tries to use fix point aritmetric. If no module is using it, it reduces the code size dramaticly. EXPERIMENTAL",
 }
 
@@ -90,13 +83,6 @@ DATA["DEBUG"] = {
 
 # modules
 
-DATA["CONFIG_DAY_OF_WEEK"] = {
-        "name": "Date: Day of Week (496 bytes)",
-        "depends": [],
-        "default": True,
-        "help": "Shows day of week on the date module",
-}
-
 DATA["CONFIG_TEST"] = {
         "name": "Test Mode (614 bytes)",
         "depends": [],
@@ -115,7 +101,7 @@ DATA["TEXT_MODULES"] = {
 DATA["CONFIG_OTP"] = {
         "name": "Google One-Time-Password",
         "depends": [],
-        "default": False,
+        "default": True,
         "help": "Generates code for Google 2-phase Authentication",
 }
 
@@ -135,118 +121,42 @@ DATA["CONFIG_EGGTIMER"] = {
         "help": "Countdown timer to count down from 1 minute - 20 hours to 0 and start an alarm",
 }
 
-DATA["CONFIG_PHASE_CLOCK"] = {
-        "name": "Phase Clock (918 bytes)",
-        "depends": [],
-        "default": False,
-        "help": "Messures sleep phase by recording body movement and sending the data to the accesspoint.\n"
-                "Designed to be used with uberclock",
-}
-
-DATA["CONFIG_ALTITUDE"] = {
-        "name": "Altitude (1202 bytes)",
-        "depends": [],
-        "default": True,
-        "help": "Messures altitude"
-        }
-
-
-DATA["CONFIG_VARIO"] = {
-        "name": "Combined with alti, gives vertical speed (478 bytes)",
-        "depends": [],
-        "default": False}
-
-DATA["CONFIG_PROUT"] = {
-        "name": "Simple example that displays a text (238 bytes)",
-        "depends": [],
-        "default": False}
-
-
-DATA["CONFIG_SIDEREAL"] = {
-        "name": "Sidereal Time Clock (3418 bytes)",
-        "depends": [],
-        "default": False,
-        "help": "Calculate and show local sidereal time (accurate to ~5s).\n"
-                "To work properly, the current time zone (that is set on the normal clock) and longitude have to be set on the watch. The clock does real sidereal second clock ticks. When desired the sidereal time can also be set manually.\n"
-                "This does NOT replace the normal clock which is still available and working."
-        }
-
-
-DATA["CONFIG_INFOMEM"] = {
-        "name": "Information Memory Driver (2934 bytes, requires sidereal clock)",
-        "depends": [],
-        "default": False,
-        "help": "Build driver for usage of the Information Memory.\n"
-                "COMPILATION WILL LIKELY FAIL WITH mspgcc4 <20100829 !"
-        }
-
-
-DATA["CONFIG_ACCEL"] = {
-        "name": "Acceleration (1232 bytes)",
-        "depends": [],
-        "default": True,
-        "help": "Acceleration applications (display and transmission). When no other application uses the acceleration sensor, it is disabled completely"
-        }
-
-DATA["CONFIG_STRENGTH"] = {
-    "name": "Strength training timer (380 bytes)",
-    "depends": [],
-    "default": False,
-    "help": "Timer for strength training studios which have you perform repetitions for 90 seconds, e.g. Kieser Training"
-}
-
 # not yet working
 DATA["CONFIG_ALARM"] = {
         "name": "Alarm (608 bytes)",
         "depends": [],
-        "default": True}
+        "default": False}
+
 DATA["CONFIG_BATTERY"] = {
         "name": "Battery (360 bytes)",
         "depends": [],
         "default": True}
+
 DATA["CONFIG_CLOCK"] = {
         "name": "Clock",
         "depends": [],
         "default": True}
+
 DATA["CONFIG_DATE"] = {
         "name": "Date",
         "depends": [],
-        "default": True}
+        "default": False}
+
 DATA["CONFIG_RFBSL"] = {
         "name": "Wireless Update",
         "depends": [],
         "default": True}
+
 DATA["CONFIG_STOP_WATCH"] = {
         "name": "Stop Watch (1202 bytes)",
         "depends": [],
         "default": True}
-DATA["CONFIG_TEMP"] = {
-        "name": "Temperature",
-        "depends": [],
-        "default": True}
-
 
 ###IMPLEMENTED BY LeanChronos. gventosa 09.10.2010
 DATA["CONFIG_USEPPT"] = {
         "name": "Use PPT",
         "depends": [],
         "default": True}
-
-DATA["CONFIG_USE_SYNC_TOSET_TIME"] = {
-	"name": "Sync is the only way to set clocks data/time",
-	"depends": [],
-	"default": False}
-
-DATA["CONFIG_USE_DISCRET_RFBSL"] = {
-	"name": "RFBSL is hidden behind battery",
-	"depends": [],
-	"default": False}
-
-DATA["CONFIG_USE_GPS"] = {
-	"name": "GPS Functions enabled (doorlock)",
-	"depends": [],
-	"default": False}
-
 
 HEADER = """
 #ifndef _CONFIG_H_

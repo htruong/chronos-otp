@@ -57,32 +57,15 @@
 #include "battery.h"
 #include "stopwatch.h"
 #include "alarm.h"
-#include "altitude.h"
 #include "display.h"
 #include "rfsimpliciti.h"
 #include "simpliciti.h"
-#ifdef FEATURE_PROVIDE_ACCEL
-#include "acceleration.h"
-#endif
 
-//pfs
-#ifndef ELIMINATE_BLUEROBIN
-#include "bluerobin.h"
-#endif
-
-#include "temperature.h"
 
 #ifdef CONFIG_EGGTIMER
 #include "eggtimer.h"
 #endif
 
-#ifdef CONFIG_SIDEREAL
-#include "sidereal.h"
-#endif
-
-#ifdef CONFIG_STRENGTH
-#include "strength.h"
-#endif
 
 // *************************************************************************************************
 // Prototypes section
@@ -330,12 +313,7 @@ __interrupt void TIMER0_A0_ISR(void)
 	display.flag.update_time = 1;
 	
 	// While SimpliciTI stack operates or BlueRobin searches, freeze system state
-	//pfs
-	#ifdef ELIMINATE_BLUEROBIN
 	if (is_rf())
-	#else
-	if (is_rf() || is_bluerobin_searching()) 
-	#endif
 	{
 		// SimpliciTI automatic timeout
 		if (sRFsmpl.timeout == 0) 
@@ -393,61 +371,6 @@ __interrupt void TIMER0_A0_ISR(void)
 	}
 	#endif
 
-#ifdef CONFIG_STRENGTH
-        // One more second gone by.
-        if(is_strength())
-	{
-		strength_tick();
-	}            
-#endif
-
-	// Do a temperature measurement each second while menu item is active
-	if (is_temp_measurement()) request.flag.temperature_measurement = 1;
-	
-	// Do a pressure measurement each second while menu item is active
-#ifdef CONFIG_ALTITUDE
-	if (is_altitude_measurement()) 
-	{
-		// Countdown altitude measurement timeout while menu item is active
-		sAlt.timeout--;
-
-		// Stop measurement when timeout has elapsed
-		if (sAlt.timeout == 0)	
-		{
-			stop_altitude_measurement();
-			// Show ---- m/ft
-			display_chars(LCD_SEG_L1_3_0, (u8*)"----", SEG_ON);
-			// Clear up/down arrow
-			display_symbol(LCD_SYMB_ARROW_UP, SEG_OFF);
-			display_symbol(LCD_SYMB_ARROW_DOWN, SEG_OFF);
-		}
-		
-		// In case we missed the IRQ due to debouncing, get data now
-		if ((PS_INT_IN & PS_INT_PIN) == PS_INT_PIN) request.flag.altitude_measurement = 1;
-	}	
-#endif
-
-#ifdef FEATURE_PROVIDE_ACCEL
-	// Count down timeout
-	if (is_acceleration_measurement()) 
-	{
-		// Countdown acceleration measurement timeout 
-		sAccel.timeout--;
-
-		// Stop measurement when timeout has elapsed
-		if (sAccel.timeout == 0) as_stop();	
-		
-		// If DRDY is (still) high, request data again
-		if ((AS_INT_IN & AS_INT_PIN) == AS_INT_PIN) request.flag.acceleration_measurement = 1; 
-	}	
-#endif
-
-	//pfs
-#ifndef ELIMINATE_BLUEROBIN
-	// If BlueRobin transmitter is connected, get data from API
-	if (is_bluerobin()) get_bluerobin_data();
-#endif
-	
 	#ifdef CONFIG_BATTERY
 	// If battery is low, decrement display counter
 	if (sys.flag.low_battery)
@@ -586,55 +509,6 @@ __interrupt void TIMER0_A1_5_ISR(void)
 		
 	switch (TA0IV)
 	{
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-		// Timer0_A1	BlueRobin timer
-		case 0x02:	// Timer0_A1 handler
-					BRRX_TimerTask_v();
-					break;
-	#endif
-	#ifdef CONFIG_SIDEREAL
-		// Timer0_A1	Used for sidereal time until CCR0 becomes free
-		case 0x02:  // Timer0_A1 handler
-				// Disable IE 
-				TA0CCTL1 &= ~CCIE;
-				// Reset IRQ flag  
-				TA0CCTL1 &= ~CCIFG;  
-				//for sidereal time we need 32768/1.00273790935=32678.529149 clock cycles for one second
-				//32678.5 clock cycles gives a deviation of ~0.9e-7~0.1s/day which is likely less than the ozillator deviation
-				if(sSidereal_time.second & 1)
-				{
-					TA0CCR1+=32678;
-				}
-				else
-				{
-					TA0CCR1+=32679;
-				}
-				// Enable IE 
-				TA0CCTL1 |= CCIE;
-				
-				// Add 1 second to global time
-				sidereal_clock_tick();
-				
-				// Set clock update flag
-				display.flag.update_sidereal_time = 1;
-				break;
-	#endif
-	#ifdef CONFIG_USE_GPS
-		case 0x02: // Disable IE
-							TA0CCTL1 &= ~CCIE;
-							// Reset IRQ flag
-							TA0CCTL1 &= ~CCIFG;
-							// Store new value in CCR
-							value = TA0R + sTimer.timer0_A1_ticks; //timer0_A1_ticks_g;
-							// Load CCR register with next capture point
-							TA0CCR1 = value;
-							// Enable timer interrupt
-							TA0CCTL1 |= CCIE;
-							// Call function handler
-							fptr_Timer0_A1_function();
-							break;
-	#endif
 		// Timer0_A2	1/1 or 1/100 sec Stopwatch				
 		case 0x04:	// Timer0_A2 handler
 					// Disable IE 

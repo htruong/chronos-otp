@@ -119,9 +119,6 @@ typedef union
     u16 altitude_measurement    	: 1;    // 1 = Measure air pressure
     u16	acceleration_measurement	: 1; 	// 1 = Measure acceleration
     u16 buzzer   			: 1;    // 1 = Output buzzer for alarm
-#ifdef CONFIG_STRENGTH
-    u16 strength_buzzer 		: 1;    // 1 = Output buzzer from strength_data
-#endif
   } flag;
   u16 all_flags;            // Shortcut to all display flags (for reset)
 } s_request_flags;

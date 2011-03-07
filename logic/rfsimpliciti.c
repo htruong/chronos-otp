@@ -52,30 +52,13 @@
 #include "timer.h"
 #include "radio.h"
 
-// logic
-#ifdef FEATURE_PROVIDE_ACCEL
-#include "acceleration.h"
-#endif
 #include "rfsimpliciti.h"
-//pfs
-#ifndef ELIMINATE_BLUEROBIN
-#include "bluerobin.h"
-#endif
 #include "simpliciti.h"
 #include "clock.h"
 #include "date.h"
 #include "alarm.h"
-#include "temperature.h"
 #include "vti_ps.h"
-#include "altitude.h"
 
-#ifdef CONFIG_PHASE_CLOCK
-#include "phase_clock.h"
-#endif
-
-#ifdef CONFIG_SIDEREAL
-#include "sidereal.h"
-#endif
 // *************************************************************************************************
 // Defines section
 
@@ -155,11 +138,6 @@ void sx_rf(u8 line)
 	// Exit if battery voltage is too low for radio operation
 	if (sys.flag.low_battery) return;
 
-	// Exit if BlueRobin stack is active
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-	if (is_bluerobin()) return;
-	#endif
 	#ifdef CONFIG_ACCEL
 	// Start SimpliciTI in tx only mode
 	start_simpliciti_tx_only(SIMPLICITI_ACCELERATION);
@@ -178,19 +156,12 @@ void sx_ppt(u8 line)
 {
 	// Exit if battery voltage is too low for radio operation
 	if (sys.flag.low_battery) return;
-
-	// Exit if BlueRobin stack is active
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-	if (is_bluerobin()) return;
-	#endif
   	
   // Start SimpliciTI in tx only mode
 	start_simpliciti_tx_only(SIMPLICITI_BUTTONS);
 }
 #endif
 
-#ifndef CONFIG_USE_SYNC_TOSET_TIME
 // *************************************************************************************************
 // @fn          sx_sync
 // @brief       Start SimpliciTI. Button DOWN connects/disconnects to access point.
@@ -202,15 +173,9 @@ void sx_sync(u8 line)
 	// Exit if battery voltage is too low for radio operation
 	if (sys.flag.low_battery) return;
 
-	// Exit if BlueRobin stack is active
-	//pfs
-	#ifndef ELIMINATE_BLUEROBIN
-	if (is_bluerobin()) return;
-  	#endif
   	// Start SimpliciTI in sync mode
 	start_simpliciti_sync();
 }
-#endif
 
 #ifdef SIMPLICITI_TX_ONLY_REQ
 // *************************************************************************************************
@@ -221,29 +186,6 @@ void sx_sync(u8 line)
 // *************************************************************************************************
 void start_simpliciti_tx_only(simpliciti_mode_t mode)
 {
-	#ifdef FEATURE_PROVIDE_ACCEL
-	u8 start_as = 0;
-	#endif
-	// Display time in line 1
-	clear_line(LINE1);  	
-	fptr_lcd_function_line1(LINE1, DISPLAY_LINE_CLEAR);
-	display_time(LINE1, DISPLAY_LINE_UPDATE_FULL);
-#ifdef CONFIG_ACCEL
-	// Preset simpliciti_data with mode (key or mouse click) and clear other data bytes
-	if (mode == SIMPLICITI_ACCELERATION)
-	{
-		simpliciti_data[0] = SIMPLICITI_MOUSE_EVENTS;
-        start_as = 1;
-	}
-#endif
-#ifdef CONFIG_PHASE_CLOCK
-    if (mode == SIMPLICITI_PHASE_CLOCK_START || mode == SIMPLICITI_PHASE_CLOCK)
-    {
-        if(mode == SIMPLICITI_PHASE_CLOCK)
-            start_as = 1;
-    	display_symbol(LCD_ICON_RECORD, SEG_ON_BLINK_ON);
-    }
-#endif
 	if (mode == SIMPLICITI_BUTTONS)
 	{
 		simpliciti_data[0] = SIMPLICITI_KEY_EVENTS;
@@ -273,25 +215,12 @@ void start_simpliciti_tx_only(simpliciti_mode_t mode)
 	// Exit with timeout or by a button DOWN press.
 	if (simpliciti_link())
 	{
-		#ifdef FEATURE_PROVIDE_ACCEL
-		if (start_as)
-		{
-			// Start acceleration sensor
-			as_start();
-		}
-		#endif
-
 		// Enter TX only routine. This will transfer button events and/or acceleration data to access point.
 		simpliciti_main_tx_only();
 	}
 
 	// Set SimpliciTI state to OFF
 	sRFsmpl.mode = SIMPLICITI_OFF;
-
-	#ifdef FEATURE_PROVIDE_ACCEL
-	// Stop acceleration sensor
-	as_stop();
-	#endif
 
 	// Powerdown radio
 	close_radio();
@@ -305,14 +234,6 @@ void start_simpliciti_tx_only(simpliciti_mode_t mode)
 	display_symbol(LCD_ICON_BEEPER1, SEG_OFF_BLINK_OFF);
 	display_symbol(LCD_ICON_BEEPER2, SEG_OFF_BLINK_OFF);
 	display_symbol(LCD_ICON_BEEPER3, SEG_OFF_BLINK_OFF);
-
-#ifdef CONFIG_PHASE_CLOCK
-    if (mode == SIMPLICITI_PHASE_CLOCK || mode == SIMPLICITI_PHASE_CLOCK_START)
-    {
-        display_symbol(LCD_ICON_RECORD, SEG_OFF_BLINK_OFF);
-
-    }
-#endif
 	
  	// Clean up line 1
 	clear_line(LINE1);  	
@@ -398,134 +319,7 @@ void simpliciti_get_ed_data_callback(void)
 	static u8 packet_counter = 0;
     u8 i;
     u16 res;
-WDTCTL = WDTPW + WDTHOLD;
-#ifdef CONFIG_ACCEL
-	if (sRFsmpl.mode == SIMPLICITI_ACCELERATION)
-	{
-		// Wait for next sample
-		Timer0_A4_Delay(CONV_MS_TO_TICKS(5));	
-
-		// Read from sensor if DRDY pin indicates new data (set in PORT2 ISR)
-		if (request.flag.acceleration_measurement && ((AS_INT_IN & AS_INT_PIN) == AS_INT_PIN))
-		{
-			// Clear flag
-			request.flag.acceleration_measurement = 0;
-			
-			// Get data from sensor
-			as_get_data(sAccel.xyz);
-			
-			// Transmit only every 3rd data set (= 33 packets / second) 
-			if (packet_counter++ > 1)
-			{
-				// Reset counter
-				packet_counter = 0;
-	
-				// Store XYZ data in SimpliciTI variable
-				simpliciti_data[1] = sAccel.xyz[0];
-				simpliciti_data[2] = sAccel.xyz[1];
-				simpliciti_data[3] = sAccel.xyz[2];
-			
-				// Trigger packet sending
-				simpliciti_flag |= SIMPLICITI_TRIGGER_SEND_DATA;
-			}
-		}
-	}
-#endif
-#ifdef CONFIG_PHASE_CLOCK
-	if (sRFsmpl.mode == SIMPLICITI_PHASE_CLOCK_START)
-	{
-		/* Initialisation phase. Get a Session id and send the
-		   program wanted */
-		//display_chars(LCD_SEG_L1_3_2, itoa(packet_counter, 2, ' '), SEG_ON);
-		
-		if(packet_counter == 30) {
-			simpliciti_flag |= SIMPLICITI_TRIGGER_STOP;
-			packet_counter = 0;
-			return;
-		}
-		display_symbol(LCD_ICON_BEEPER1, SEG_ON_BLINK_ON);
-		display_symbol(LCD_ICON_BEEPER2, SEG_ON_BLINK_ON);
-
-		// send hw address so he recognices us and we will get a session id
-		simpliciti_data[0] = SIMPLICITI_PHASE_CLOCK_START_EVENTS;
-		// put 2 bytes of watch id into the package
-		WATCH_ID(simpliciti_data, 1);
-		// FIXME: TODO set program  
-		simpliciti_data[3] = sPhase.program;
-		simpliciti_flag |= SIMPLICITI_TRIGGER_SEND_DATA | SIMPLICITI_TRIGGER_RECEIVE_DATA;
-		packet_counter ++;
-		
-	}
-	else if (sRFsmpl.mode == SIMPLICITI_PHASE_CLOCK)
-	{
-		//display_symbol(LCD_ICON_BEEPER1, SEG_ON_BLINK_ON);
-		// Wait for next sample
-		display_symbol(LCD_ICON_RECORD, SEG_ON);
-		Timer0_A4_Delay(CONV_MS_TO_TICKS(60));	
-		// Read from sensor if DRDY pin indicates new data (set in PORT2 ISR)
-		if (request.flag.acceleration_measurement && ((AS_INT_IN & AS_INT_PIN) == AS_INT_PIN))
-		{
-			// Clear flag
-			request.flag.acceleration_measurement = 0;
-			
-			// Get data from sensor
-			as_get_data(sAccel.xyz);
-			
-			// push messured data onto the stack
-			if (sPhase.data_nr > SLEEP_DATA_BUFFER-1) {
-				phase_clock_calcpoint();
-				display_symbol(LCD_ICON_BEEPER1, SEG_OFF);
-				display_symbol(LCD_ICON_BEEPER2, SEG_OFF);
-				display_symbol(LCD_ICON_BEEPER3, SEG_OFF);
-
-			} else {
-				// copy current value onto the stack
-				//memcpy(&sPhase.data[sPhase.data_nr][0], &sAccel.xyz, sizeof(u8)*3);
-				sPhase.data[sPhase.data_nr][0] = sAccel.xyz[0];
-				sPhase.data[sPhase.data_nr][1] = sAccel.xyz[1];
-				sPhase.data[sPhase.data_nr][2] = sAccel.xyz[2];
-				//simpliciti_data[3] = sAccel.xyz[2];
-				sPhase.data_nr++;
-			}
-//str = itoa(accel_data, 3, 0);
-
-			if ((sPhase.out_nr > SLEEP_OUT_BUFFER-1))
-			{
-				// Reset counter
-				sPhase.out_nr = 0;
-				res = 0;
-
-				for(i=0; i < SLEEP_OUT_BUFFER; i++) {
-					//if (((2**17)-1))
-					// FIXME: overflow detection ?
-					res += sPhase.out[i];
-				}
-				packet_counter = (packet_counter+1)%SLEEP_MAX_PACKET_COUNTER;
-				simpliciti_data[3] =  (sPhase.session << (8-SLEEP_RF_ID_BIT_LENGHT)) | packet_counter;
-				simpliciti_data[2] =  res  & 0xFF;
-				simpliciti_data[1] =  (res >> 8) & 0xFF;
-				simpliciti_data[0] = SIMPLICITI_PHASE_CLOCK_EVENTS;
-
-				simpliciti_payload_length = 4;
-
-				display_symbol(LCD_ICON_BEEPER1, SEG_ON_BLINK_ON);
-				display_symbol(LCD_ICON_BEEPER2, SEG_ON_BLINK_ON);
-				display_symbol(LCD_ICON_BEEPER3, SEG_ON_BLINK_ON);
-
-                open_radio();
-                
-				simpliciti_flag |= SIMPLICITI_TRIGGER_SEND_DATA;
-			} else if (sPhase.out_nr == 0) {
-                // shutoff radio. no need to let it run for so long
-                close_radio();
-            }
-
-
-            sRFsmpl.timeout = SIMPLICITI_TIMEOUT; 
-
-		}
-    }
-#endif
+	WDTCTL = WDTPW + WDTHOLD;
 	if (sRFsmpl.mode == SIMPLICITI_BUTTONS) // transmit only button events
 	{
 		// New button event is stored in data
@@ -580,16 +374,6 @@ int simpliciti_get_rvc_callback(u8 len)
 
 	switch (simpliciti_data[0])
 	{
-#ifdef CONFIG_PHASE_CLOCK
-        case SIMPLICITI_PHASE_CLOCK_START_RESPONSE:	// Send watch parameters
-            sPhase.session = simpliciti_data[1];
-            sRFsmpl.mode = SIMPLICITI_PHASE_CLOCK;
-            simpliciti_data[0] = 0x00;
-            simpliciti_data[1] = 0x00;
-            simpliciti_data[2] = 0x00;
-            as_start();
-            return 1;
-#endif
     }
     return 0;
 }
@@ -607,20 +391,6 @@ void start_simpliciti_sync(void)
 	//clear_line(LINE1);
 	//fptr_lcd_function_line1(LINE1, DISPLAY_LINE_CLEAR);
 	
-	#ifdef FEATURE_PROVIDE_ACCEL
-	// Stop acceleration sensor
-	as_stop();
-	#endif
-
-	// Get updated altitude
-#ifdef CONFIG_ALTITUTDE
-	start_altitude_measurement();
-	stop_altitude_measurement();	
-#endif
-		
-	// Get updated temperature	
-	temperature_measurement(FILTER_OFF);
-
 	// Turn on beeper icon to show activity
 	display_symbol(LCD_ICON_BEEPER1, SEG_ON_BLINK_ON);
 	display_symbol(LCD_ICON_BEEPER2, SEG_ON_BLINK_ON);
@@ -695,28 +465,11 @@ void simpliciti_sync_decode_ap_cmd_callback(void)
 
 		case SYNC_AP_CMD_SET_WATCH:		// Set watch parameters
 										sTime.system_time 	= (u32)((((u32)(simpliciti_data[1])) << 24) + (((u32)(simpliciti_data[2])) << 16) + (u16)(simpliciti_data[3] << 8) + (u32)(simpliciti_data[4]));
-										sTime.UTCoffset 		= (s8)simpliciti_data[5];
-										#ifdef CONFIG_ALARM
-										sAlarm.hour			= simpliciti_data[8];
-										sAlarm.minute		= simpliciti_data[9];
-										#endif
-										// Set temperature and temperature offset
-										t1 = (s16)((simpliciti_data[10]<<8) + simpliciti_data[11]);
-										offset = t1 - (sTemp.degrees - sTemp.offset);
-										sTemp.offset  = offset;	
-										sTemp.degrees = t1;									
-										// Set altitude
-#ifdef CONFIG_ALTITUDE
-										sAlt.altitude = (s16)((simpliciti_data[12]<<8) + simpliciti_data[13]);
-										update_pressure_table(sAlt.altitude, sAlt.pressure, sAlt.temperature);
-#endif
-#ifdef CONFIG_SIDEREAL
-										if(sSidereal_time.sync>0)
-											sync_sidereal();
-#endif
-#ifdef CONFIG_USE_SYNC_TOSET_TIME
+										sTime.UTCoffset = simpliciti_data[5];
+										
 										simpliciti_flag |= SIMPLICITI_TRIGGER_STOP;
-#endif
+										// Needs to resync the calculated time...
+										sTime.force_resync = 1;
 										break;
 												
 		case SYNC_AP_CMD_GET_MEMORY_BLOCKS_MODE_1:	
@@ -783,12 +536,6 @@ void simpliciti_sync_get_data_callback(unsigned int index)
 										simpliciti_data[8]  = 4;
 										simpliciti_data[9]  = 30;
 										#endif
-										simpliciti_data[10] = sTemp.degrees >> 8;
-										simpliciti_data[11] = sTemp.degrees & 0xFF;
-#ifdef CONFIG_ALTITUDE
-										simpliciti_data[12] = sAlt.altitude >> 8;
-										simpliciti_data[13] = sAlt.altitude & 0xFF;
-#endif
 										break;
 										
 		case SYNC_ED_TYPE_MEMORY:		
