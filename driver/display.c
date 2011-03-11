@@ -610,21 +610,21 @@ void display_all_off(void)
 	}
 }
 
-
+/*
 u8 outstr[] = "123456789012";
 
 u8 *padint( u8 val, u8 length, u8 leftpad, u8 rightpad ) {
-    /* Converts an integer to a string with leftpad spaces before and
-     * rightpad spaces after. */
+    // Converts an integer to a string with leftpad spaces before and
+    // rightpad spaces after. 
 
     int i;
 
-    /* set whole field to spaces */
+    // set whole field to spaces
     for( i=0; i<sizeof(outstr); i++ ) outstr[i] = ' ';
-    /* truncate string -- needed for printf() */
+    // truncate string -- needed for printf() 
     outstr[length] = '\0';
 
-    /* fill in the number from the right until we hit left padding */
+    // fill in the number from the right until we hit left padding 
     length = length - rightpad - 1;
     while( length >= leftpad ) {
 	outstr[length--] = val%10 + '0';
@@ -633,3 +633,4 @@ u8 *padint( u8 val, u8 length, u8 leftpad, u8 rightpad ) {
 
     return outstr;
 }
+*/

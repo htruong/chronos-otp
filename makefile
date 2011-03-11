@@ -20,7 +20,7 @@ CC_INCLUDE = -I$(PROJ_DIR)/ -I$(PROJ_DIR)/include/ -I$(PROJ_DIR)/gcc/ -I$(PROJ_D
 
 CC_COPT		=  $(CC_CMACH) $(CC_DMACH) $(CC_DOPT)  $(CC_INCLUDE) 
 
-LOGIC_SOURCE = logic/alarm.c logic/battery.c  logic/clock.c logic/date.c logic/menu.c logic/rfbsl.c logic/rfsimpliciti.c logic/stopwatch.c logic/test.c logic/user.c logic/eggtimer.c logic/otp.c
+LOGIC_SOURCE = logic/alarm.c logic/battery.c  logic/clock.c logic/date.c logic/menu.c logic/rfbsl.c logic/otp.c logic/rfsimpliciti.c logic/stopwatch.c logic/test.c logic/user.c logic/eggtimer.c
 
 LOGIC_O = $(addsuffix .o,$(basename $(LOGIC_SOURCE)))
 

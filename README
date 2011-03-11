@@ -1,24 +1,25 @@
 -------------------------------------------------------------------
-THIS FIRMWARE CURRENTLY HAS A YET-TO-IMPLEMENT CLOCK FUNCTIONALITY,
-SO IT WONT DISPLAY TIME PROPERLY, WONT WAKE YOU UP IN THE MORNING,
-AND WILL MAKE YOUR GIRLFRIEND DUMP YOU!
-
-You have been warned!
+Do not sue me if this firmware makes you mad.
 -------------------------------------------------------------------
-
-Now the fun part.
-
 
 == Status ==
 
-Works,... But full of hacks.
+Works,... 
+
+== You don't have to compile anymore! ==
+
+Now just flash the firmware with whatever software you have,
+Then do python3 sync.py, you should be set.
+
+The pre-built firmware can be downloaded from:
+http://tnhh.net/chronos-otp
 
 == Requirements ==
 
 msp430-gcc4 http://mspgcc4.sourceforge.net/
 make
 python http://python.org
-
+python3
 
 == HOWTO ==
 
@@ -32,24 +33,12 @@ which will generate a config.h file that contains the settings for your build.
 * To compile the image run:
    $ make
 
-* To flash the image:
-   $ cd ControlCenter
-   $ ./truong-CC.tcl
-   (NOTE: The stock Control Panel won't work with this firmware. 
-   The time struc when syncing on this firmware is different from the stock.
-   This is a genuine truong_epoch implementation, not the lame 
-   if hour=23 && minute==59 && second==59 then day+=1 implementation. :-)
- Use the Wireless Update function to update the firmware, as usual.
+* To flash the image: Use any flasher that you are using.
+  Use the Wireless Update function to update the firmware, as usual.
  
+* Sync time:
+  python3 sync.py TIMEZONE 16CHARSKEY
  
-* Sync time: 
-   1 Go to Simplicity Sync Tab, Click Start Access Point.
-   2 Get your watch to sync mode, push the down (v) button to sync.
-   3 Now click Set Watch (click twice if you're getting desperate)
-   4 Click Read Watch, twice if failed, it should say something ....0xFF.
-   5 If fail, try step 3 & 4 again, it's kind of unreliable. 
-   You can blame me on many things, but don't blame me on this. Not my fault.
-   
 * NOTE: This firmware "locks" wireless update by default, so you have to push
 the down (v) button once to unlock, then hold # to start wireless update again.
    
@@ -60,4 +49,5 @@ Questions, please email to hnt7438 at truman period edu.
 
 Changes:
 - Now UTC time works! :-)
-
+- Universal binary (no need to build your customized binary anymore!)
+- Now wireless sync works with your universal binary!

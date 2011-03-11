@@ -105,15 +105,6 @@ DATA["CONFIG_OTP"] = {
         "help": "Generates code for Google 2-phase Authentication",
 }
 
-
-DATA["GOOGLE_SECRET_KEY"] = {
-        "name": "Google Secret Key",
-        "type": "text",
-        "default": "\"WARAJAH2I7FFGZQR\\000\"",
-        "ifndef": True,
-        "help": "Google Secret key, 16 chars A-Z 2-7, looks something like that, put \\000 towards the end",
-}
-
 DATA["CONFIG_EGGTIMER"] = {
         "name": "Eggtimer (1524 bytes)",
         "depends": [],

@@ -106,9 +106,7 @@ void reset_clock(void)
 	// Reset timeout detection
 	sTime.last_activity               = 0;
 	
-	#ifdef CONFIG_SIDEREAL
-	sTime.UTCoffset				  =0;
-	#endif
+	sTime.UTCoffset				  = 0;
 }
 
 
@@ -167,10 +165,9 @@ void clock_resync(void)
   u32 calc_time;
   if(sTime.UTCoffset == 0) {
 	calc_time = sTime.system_time;
-  } else if (sTime.UTCoffset < 0) {
-	calc_time = sTime.system_time + (u8)(sTime.UTCoffset * (-1)) * 3600;
   } else {
-	calc_time = sTime.system_time - (u8)sTime.UTCoffset * 3600;
+	// God please let this be right.
+	calc_time = (u32)(sTime.system_time + (s32)(sTime.UTCoffset)*3600);
   }
 
   sTime.second = calc_time % 60;

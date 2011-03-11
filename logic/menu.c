@@ -270,9 +270,6 @@ const struct menu *menu_L2[]={
 	#ifdef CONFIG_EGGTIMER
 	&menu_L2_Eggtimer,
 	#endif
-	#ifdef CONFIG_OTP
-	&menu_L2_Otp,
-	#endif
 	#ifdef CONFIG_BATTERY
 	&menu_L2_Battery,
 	#endif
@@ -281,6 +278,9 @@ const struct menu *menu_L2[]={
 	#endif
 	&menu_L2_Sync,
 	&menu_L2_RFBSL,
+	#ifdef CONFIG_OTP
+	&menu_L2_Otp,
+	#endif
 };
 
 const int menu_L2_size=sizeof(menu_L2)/sizeof(struct menu*);
