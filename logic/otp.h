@@ -31,6 +31,8 @@ extern void sx_otp(u8 line);
 extern void display_otp(u8 line, u8 update);
 extern void update_otp(u8 line, u8 update);
 
+extern void recalculate_otp();
+
 typedef struct {
     u32 state[5];
     u32 count[2];
@@ -39,10 +41,11 @@ typedef struct {
 
 struct otp_cache {
   u32 last_hash;
-  u32 last_update;
+  u32 next_update;
   u8 disp_scroll;
   u8 needs_screen_updated;
   u8 secretkey[OTP_KEY_LEN];
+  u8 inactive;
 };
 
 extern struct otp_cache sOtp_cache;

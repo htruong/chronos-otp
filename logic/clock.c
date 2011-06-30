@@ -149,8 +149,8 @@ void clock_tick(void)
 			  if (sTime.hour == 24)
 			  {
 				  sTime.hour = 0;
-				  sTime.force_resync = 1;
-				  clock_resync();
+				  // sTime.force_resync = 1;
+				  // clock_resync();
 			  }
 		  }
 	  }
@@ -166,7 +166,6 @@ void clock_resync(void)
   if(sTime.UTCoffset == 0) {
 	calc_time = sTime.system_time;
   } else {
-	// God please let this be right.
 	calc_time = (u32)(sTime.system_time + (s32)(sTime.UTCoffset)*3600);
   }
 

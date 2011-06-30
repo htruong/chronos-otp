@@ -48,6 +48,10 @@ Questions, please email to hnt7438 at truman period edu.
 
 
 Changes:
+beta2
+- Vastly improved battery usage
+
+beta1
 - Now UTC time works! :-)
 - Universal binary (no need to build your customized binary anymore!)
 - Now wireless sync works with your universal binary!

@@ -66,6 +66,9 @@
 #include "eggtimer.h"
 #endif
 
+#ifdef CONFIG_OTP
+#include "otp.h"
+#endif
 
 // *************************************************************************************************
 // Prototypes section
@@ -308,6 +311,15 @@ __interrupt void TIMER0_A0_ISR(void)
 	
 	// Add 1 second to global time
 	clock_tick();
+	
+	#ifdef CONFIG_OTP
+	// Rechecks 
+	if (!sOtp_cache.inactive) {
+	  if (sTime.second == 0 || sTime.second == 30) {
+	    recalculate_otp();
+	  }
+	}
+	#endif
 	
 	// Set clock update flag
 	display.flag.update_time = 1;

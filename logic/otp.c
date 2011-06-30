@@ -214,33 +214,14 @@ void sx_otp(u8 line)
 {
   sOtp_cache.disp_scroll = (sOtp_cache.disp_scroll + 1) % 2;
   sOtp_cache.needs_screen_updated = 1;
+  update_otp(line, DISPLAY_LINE_UPDATE_PARTIAL);
 }
 
-void update_otp(u8 line, u8 update)
+void recalculate_otp() 
 {
+  if (sOtp_cache.next_update > sTime.system_time) return;
   
-  if (sOtp_cache.needs_screen_updated) {
-	// The screen is kind of wacky and can only display 5 chars at once.
-	// So we need to display 3 at a time [ -123] and [456- ]
-	if (sOtp_cache.disp_scroll == 0) {
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8*)" -XXX", SEG_ON);
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_2_0), itoa(sOtp_cache.last_hash / 1000, 3, 0), SEG_ON);
-	} else {
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 0), SEG_ON);
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_1_0), (u8*)"- ", SEG_ON);
-	}
-	
-	sOtp_cache.needs_screen_updated = 0;
-  }
-  
-  // If this is not the 30th second, never bother updating
-  // Unless we have never updated the totp
-  if (sTime.system_time % 30 && sOtp_cache.last_update) return;
-  
-  // If the token was calculated in the last 15 sec, never bother updating
-  // Note that the above return won't cover this one
-  // As the timer ticks 100 times a sec
-  if ((sTime.system_time - sOtp_cache.last_update) < 15) return;
+  sOtp_cache.next_update = ((u16)(sTime.system_time / 30))*30 + 30;
   
   u8 *secret = sOtp_cache.secretkey;
   
@@ -271,17 +252,37 @@ void update_otp(u8 line, u8 update)
 	sOtp_cache.disp_scroll = 0;
 	sOtp_cache.last_hash = truncatedHash;
 	sOtp_cache.needs_screen_updated = 1;
-	sOtp_cache.last_update = sTime.system_time;
-  //}
 }
+
+void update_otp(u8 line, u8 update)
+{
+	// The screen is kind of wacky and can only display 5 chars at once.
+	// So we need to display 3 at a time [ -123] and [456- ]
+	if (sOtp_cache.disp_scroll == 0) {
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8*)" -XXX", SEG_ON);
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_2_0), itoa(sOtp_cache.last_hash / 1000, 3, 0), SEG_ON);
+	} else {
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), itoa(sOtp_cache.last_hash % 1000, 3, 0), SEG_ON);
+	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_1_0), (u8*)"- ", SEG_ON);
+	}
+	
+	sOtp_cache.needs_screen_updated = 0;
+}
+
+
 
 void display_otp(u8 line, u8 update)
 {
-	if (update == DISPLAY_LINE_UPDATE_FULL) {
-	  display_chars(switch_seg(line, LCD_SEG_L1_3_0, LCD_SEG_L2_4_0), (u8 *)" totp", SEG_ON);
-	} else {
+  if (update == DISPLAY_LINE_UPDATE_PARTIAL) {
+	if (sOtp_cache.needs_screen_updated) {
 	  update_otp(line, update);
 	}
+  } else if (update == DISPLAY_LINE_UPDATE_FULL) {
+	sOtp_cache.inactive = 0;
+        update_otp(line, update);
+  } else if (update == DISPLAY_LINE_CLEAR) {
+	sOtp_cache.inactive = 1;
+  }
 }
 
 #endif // CONFIG_OTP
